@@ -17,7 +17,7 @@ class FileDownloader:
         asyncio.run(self.download_files())
 
     async def download_files(self):
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(trust_env=True) as session:
             for endpoint in self.endpoints:
                 async with session.get(self.ROOT_URL + endpoint) as response:
                     assert response.status == 200
@@ -30,7 +30,7 @@ class FileDownloader:
 
     @staticmethod
     async def get_html(url):
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(trust_env=True) as session:
             async with session.get(url) as response:
                 a = await response.text()
 

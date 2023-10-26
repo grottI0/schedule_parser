@@ -132,19 +132,19 @@ class ResultTable:
 
         for column in self.columns:
             _ = column.name.split('\n')[0]
-            '''if _ in df:
-                REP[_]+=1
-                df[f'{_} ({REP[_]})'] = ['']*len(df)'''
             df[_] = ['']*len(df)
             for element in column.elements:
                 cond = (element.number == df['Пара']) & (element.even == df['Четность']) & (element.day == df['День'])
 
                 df.loc[cond, _] = f'{element.teacher}\n{element.auditory}\n{element.type} {element.duration}\n{element.group}'
 
-        # print(df)
         del df['Четность']
-        df.to_excel(rf'{xlsx_path}', index=False)
+        df.loc[df.assign(d=df['День']).duplicated(['День']), 'День'] = nan
 
+        for i in range(6):
+            buf = df.loc[i*10:(i+1)*10-1]
+            buf.loc[buf.assign(d=buf['Пара']).duplicated(['Пара']), 'Пара'] = nan
+        df.to_excel(rf'{xlsx_path}', index=False)
 
 
 class StudentGroupSchedule:
