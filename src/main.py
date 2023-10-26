@@ -1,4 +1,5 @@
 import os
+import shutil
 from glob import glob
 
 import camelot
@@ -13,26 +14,31 @@ def csv_from_pdf(pdf_path: str):
 
     tables = camelot.read_pdf(pdf_path, flavor='lattice', pages='1', line_scale=120)
     df = pandas.concat([table.df for table in tables])
-    df.to_csv(f'../temp/{pdf_path}.csv', index=False)
+    df.to_csv(f'{pdf_path}.csv', index=False)
 
 
-os.mkdir('../temp')
+os.mkdir('temp')
+print('Getting endpoints...')
 fd = FileDownloader()
-while len(fd.endpoints) == 0:
-    fd = FileDownloader()
-    print(fd.endpoints)
-    fd.run()
+print(f'Total: {len(fd.endpoints)}\n')
+print('Downloading files...\n')
+fd.run()
 
 rt = ResultTable()
-pdfs = glob('../temp/*.pdf')
-
+pdfs = glob('temp/*.pdf')
+print('Converting files...')
 for pdf in tqdm(pdfs):
     csv_from_pdf(pdf)
 
-csvs = glob('../temp/*.csv')
+csvs = glob('temp/*.csv')
 
+print('Parsing...')
 for csv in csvs:
     sg = StudentGroupSchedule(csv)
     rt.add_from_student_schedule(sg.df, sg.group)
 
-rt.to_xlsx('../out.xlsx')
+rt.to_xlsx('out.xlsx')
+print('Saved result to out.xlsx')
+os.rmdir('./temp')
+
+shutil.rmtree(f'{os.getcwd()}/temp')

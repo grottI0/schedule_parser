@@ -144,6 +144,10 @@ class ResultTable:
         for i in range(6):
             buf = df.loc[i*10:(i+1)*10-1]
             buf.loc[buf.assign(d=buf['Пара']).duplicated(['Пара']), 'Пара'] = nan
+
+        df = pandas.concat([df['День'], df['Пара'],
+                           df.loc[:, (df.columns != 'День') & (df.columns != 'Пара')].sort_index(axis=1)],
+                           axis=1, join='inner')
         df.to_excel(rf'{xlsx_path}', index=False)
 
 

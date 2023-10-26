@@ -17,11 +17,11 @@ class FileDownloader:
         asyncio.run(self.download_files())
 
     async def download_files(self):
-        async with aiohttp.ClientSession(trust_env=True) as session:
+        async with aiohttp.ClientSession() as session:
             for endpoint in self.endpoints:
                 async with session.get(self.ROOT_URL + endpoint) as response:
                     assert response.status == 200
-                    with open(f'../temp/{self.get_file_name(endpoint)}', "wb") as f:
+                    with open(f'temp/{self.get_file_name(endpoint)}', "wb") as f:
                         while True:
                             chunk = await response.content.readany()
                             if not chunk:
@@ -30,7 +30,7 @@ class FileDownloader:
 
     @staticmethod
     async def get_html(url):
-        async with aiohttp.ClientSession(trust_env=True) as session:
+        async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
                 a = await response.text()
 
@@ -49,10 +49,3 @@ class FileDownloader:
         soup = BeautifulSoup(html, "html.parser")
         content = soup.body.find_all('a', href=re.compile('.*.pdf$'))
         return [_['href'] for _ in content if self.check_group(_['href'])]
-
-    @staticmethod
-    def remove_files():
-        for f in glob("*.pdf"):
-            os.remove(f)
-        for f in glob("*.csv"):
-            os.remove(f)
