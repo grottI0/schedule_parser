@@ -51,6 +51,8 @@ class FileDownloader:
         return [_['href'] for _ in content if self.check_group(_['href'])]
 
     @staticmethod
-    def remove_pdfs():
+    def remove_files():
         for f in glob("*.pdf"):
+            os.remove(f)
+        for f in glob("*.csv"):
             os.remove(f)

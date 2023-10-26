@@ -2,3 +2,5 @@ temp
 venv
 .idea
 src/__pycache__
+src/employers_tuple.py
+*.xlsx
