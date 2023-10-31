@@ -29,9 +29,6 @@ class Column:
         self.name = name
         self.elements = list()
 
-    def add_element(self, day, number, even: bool, subject, auditory, teacher, t, group, duration):
-        self.elements.append(Element(day, number, even, subject, duration, auditory, teacher, t, group))
-
     def add_element_(self, e: Element):
         self.elements.append(e)
 
@@ -77,6 +74,7 @@ class ResultTable:
             self[e.subject][0].add_element_(e)
 
         else:
+            exist = False
             for column in self[e.subject]:
                 exist = False
                 for element in column.elements:
@@ -125,7 +123,7 @@ class ResultTable:
         df = pandas.DataFrame()
         df['День'] = list(itertools.chain(*[[days[i]]*10 for i in range(len(days))]))
 
-        _ = [[i] *2 for i in schedule] * len(days)
+        _ = [[i] * 2 for i in schedule] * len(days)
         df['Пара'] = list(itertools.chain(*_))
 
         df['Четность'] = [r[0] % 2 != 0 for r in df.iterrows()]
@@ -148,7 +146,19 @@ class ResultTable:
         df = pandas.concat([df['День'], df['Пара'],
                            df.loc[:, (df.columns != 'День') & (df.columns != 'Пара')].sort_index(axis=1)],
                            axis=1, join='inner')
-        df.to_excel(rf'{xlsx_path}', index=False)
+
+        writer = pandas.ExcelWriter(xlsx_path, engine='xlsxwriter')
+        df.to_excel(writer, index=False, sheet_name='Sheet1')
+        wb = writer.book
+        _format = wb.add_format({'align': 'center'})
+
+        for i in range(1, 61):
+            writer.sheets['Sheet1'].set_row(i, 80, _format)
+
+        for i in range(1, len(self.columns)):
+            writer.sheets['Sheet1'].set_column('A:BA', 500, _format)
+
+        writer._save()
 
 
 class StudentGroupSchedule:

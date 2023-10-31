@@ -1,10 +1,12 @@
 import os
 import re
+from time import sleep
 from glob import glob
 import asyncio
 
 import aiohttp
 from bs4 import BeautifulSoup
+from selenium.webdriver import Chrome, ChromeOptions
 
 
 class FileDownloader:
@@ -12,9 +14,33 @@ class FileDownloader:
     def __init__(self):
         self.ROOT_URL = "https://mtuci.ru"
         self.endpoints = self.get_files_urls(asyncio.run(self.get_html(self.ROOT_URL+'/time-table')))
+        if len(self.endpoints) == 0:
+            driver = self.get_driver()
+            driver.get(self.ROOT_URL + '/time-table')
+            sleep(3)
+            self.endpoints = self.get_files_urls(driver.page_source)
+            driver.close()
 
     def run(self):
         asyncio.run(self.download_files())
+
+    @staticmethod
+    def get_driver(download: bool = False) -> Chrome:
+
+        options = ChromeOptions()
+        options.add_argument('headless')
+
+        if download:
+            chrome_prefs = {
+                "download.prompt_for_download": False,
+                "plugins.always_open_pdf_externally": True,
+                "download.open_pdf_in_system_reader": False,
+                "profile.default_content_settings.popups": 0,
+                "download.default_directory": "/home/denis/PycharmProjects/parser/temp"
+            }
+            options.add_experimental_option("prefs", chrome_prefs)
+
+        return Chrome(options=options)
 
     async def download_files(self):
         async with aiohttp.ClientSession() as session:

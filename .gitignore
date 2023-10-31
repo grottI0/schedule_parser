@@ -5,3 +5,4 @@ src/__pycache__
 src/employers_tuple.py
 *.xlsx
 t
+.mypy_cache

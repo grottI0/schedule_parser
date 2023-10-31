@@ -1,10 +1,12 @@
 import os
 import shutil
 from glob import glob
+from time import sleep
 
 import camelot
 import pandas
 from tqdm import tqdm
+from pypdf.errors import PdfStreamError
 
 from files_downloader import FileDownloader
 from tables import StudentGroupSchedule, ResultTable
@@ -12,7 +14,8 @@ from tables import StudentGroupSchedule, ResultTable
 
 def csv_from_pdf(pdf_path: str):
 
-    tables = camelot.read_pdf(pdf_path, flavor='lattice', pages='1', line_scale=120)
+    tables = camelot.read_pdf(pdf_path, flavor='lattice', pages='1',
+                              line_scale=120)
     df = pandas.concat([table.df for table in tables])
     df.to_csv(f'{pdf_path}.csv', index=False)
 
@@ -22,7 +25,16 @@ print('Getting endpoints...')
 fd = FileDownloader()
 print(f'Total: {len(fd.endpoints)}\n')
 print('Downloading files...\n')
-fd.run()
+
+try:
+    fd.run()
+except PdfStreamError:
+    driver = fd.get_driver(download=True)
+    shutil.rmtree(f'{os.getcwd()}/temp')
+    for e in tqdm(fd.endpoints):
+        driver.get(fd.ROOT_URL + e)
+        sleep(1.5)
+    driver.close()
 
 rt = ResultTable()
 pdfs = glob('temp/*.pdf')
@@ -38,7 +50,7 @@ for csv in csvs:
     rt.add_from_student_schedule(sg.df, sg.group)
 
 rt.to_xlsx('out.xlsx')
+
 print('Saved result to out.xlsx')
-os.rmdir('./temp')
 
 shutil.rmtree(f'{os.getcwd()}/temp')
