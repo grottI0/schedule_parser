@@ -20,27 +20,35 @@ def csv_from_pdf(pdf_path: str):
     df.to_csv(f'{pdf_path}.csv', index=False)
 
 
+def convert_pdfs():
+    pdfs = glob('temp/*.pdf')
+    print('Converting files...')
+    for pdf in tqdm(pdfs):
+        csv_from_pdf(pdf)
+
+
 os.mkdir('temp')
 print('Getting endpoints...')
 fd = FileDownloader()
 print(f'Total: {len(fd.endpoints)}\n')
-print('Downloading files...\n')
+print('Async downloading...\n')
+
+fd.run()
 
 try:
-    fd.run()
+    convert_pdfs()
 except PdfStreamError:
+    print('Async download failed...')
+    print('Sync download through webdriver...')
     driver = fd.get_driver(download=True)
     shutil.rmtree(f'{os.getcwd()}/temp')
     for e in tqdm(fd.endpoints):
         driver.get(fd.ROOT_URL + e)
-        sleep(1.5)
+        sleep(2)
     driver.close()
+    convert_pdfs()
 
 rt = ResultTable()
-pdfs = glob('temp/*.pdf')
-print('Converting files...')
-for pdf in tqdm(pdfs):
-    csv_from_pdf(pdf)
 
 csvs = glob('temp/*.csv')
 

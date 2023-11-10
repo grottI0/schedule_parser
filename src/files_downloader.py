@@ -36,7 +36,7 @@ class FileDownloader:
                 "plugins.always_open_pdf_externally": True,
                 "download.open_pdf_in_system_reader": False,
                 "profile.default_content_settings.popups": 0,
-                "download.default_directory": "/home/denis/PycharmProjects/parser/temp"
+                "download.default_directory": f"{os.getcwd()}/temp"
             }
             options.add_experimental_option("prefs", chrome_prefs)
 
