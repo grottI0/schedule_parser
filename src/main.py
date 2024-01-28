@@ -6,6 +6,7 @@ from time import sleep
 import camelot
 import pandas
 from tqdm import tqdm
+from pypdf import PdfReader
 from pypdf.errors import PdfStreamError
 
 from files_downloader import FileDownloader
@@ -14,7 +15,7 @@ from tables import StudentGroupSchedule, ResultTable
 
 def csv_from_pdf(pdf_path: str):
 
-    tables = camelot.read_pdf(pdf_path, flavor='lattice', pages='1',
+    tables = camelot.read_pdf(pdf_path, flavor='lattice', pages='1-end',
                               line_scale=120)
     df = pandas.concat([table.df for table in tables])
     df.to_csv(f'{pdf_path}.csv', index=False)
@@ -27,6 +28,14 @@ def convert_pdfs():
         csv_from_pdf(pdf)
 
 
+def delete_useless(pdfs):
+    for pdf in pdfs:
+        reader = PdfReader(pdf)
+
+        if 'Расписание учебных занятий' not in reader.pages[0].extract_text():
+            os.remove(pdf)
+
+
 os.mkdir('temp')
 print('Getting endpoints...')
 fd = FileDownloader()
@@ -34,6 +43,8 @@ print(f'Total: {len(fd.endpoints)}\n')
 print('Async downloading...\n')
 
 fd.run()
+
+delete_useless(glob('temp/*.pdf'))
 
 try:
     convert_pdfs()

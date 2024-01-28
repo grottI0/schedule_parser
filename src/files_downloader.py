@@ -59,19 +59,21 @@ class FileDownloader:
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
                 a = await response.text()
-
         return a
 
     @staticmethod
     def get_file_name(endpoint) -> str:
-        return endpoint.split('/')[-1]
+        return ' '.join(endpoint.split('/')[-2::])
 
     def check_group(self, s: str) -> bool:
-        s = self.get_file_name(s)
+        s = self.get_file_name(s).split(' ')[-1]
 
         return s[0] in 'BMZ' and 'TSZOPB' not in s and 'SiSS' not in s
 
     def get_files_urls(self, html) -> list:
         soup = BeautifulSoup(html, "html.parser")
         content = soup.body.find_all('a', href=re.compile('.*.pdf$'))
-        return [_['href'] for _ in content if self.check_group(_['href'])]
+
+        urls = [_['href'] for _ in content if self.check_group(_['href'])]
+
+        return urls

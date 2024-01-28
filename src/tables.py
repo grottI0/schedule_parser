@@ -2,7 +2,7 @@ import re
 import itertools
 
 import pandas
-from numpy import nan
+from numpy import nan, isnan
 
 from employers_tuple import employers
 from data import subjects, letters_en_to_ru, days, schedule
@@ -45,7 +45,7 @@ class ResultTable:
     @staticmethod
     def get_subject(s: str):
         subject = re.search(r'[\w\n\s]{0,56}', s)[0].replace('\n', '') if s is not nan else ''
-        return subject
+        return subject.strip()
 
     @staticmethod
     def get_duration(s: str):
@@ -102,7 +102,9 @@ class ResultTable:
                 _ = r.iloc[0]
 
             subject = self.get_subject(r.iloc[6])
-            if subject in subjects and r.iloc[5] in employers:
+            employer = '' if isinstance(r.iloc[5], float) and isnan(r.iloc[5]) else r.iloc[5].strip()
+
+            if subject in subjects and employer in employers:
                 duration = self.get_duration(r.iloc[6])
                 e_odd = Element(day=_, number=int(r.iloc[1][0]),
                                 auditory=r.iloc[3], t=r.iloc[4],
@@ -155,7 +157,7 @@ class ResultTable:
         for i in range(1, 61):
             writer.sheets['Sheet1'].set_row(i, 80, _format)
 
-        for i in range(1, len(self.columns)):
+        for i in range(len(self.columns)):
             writer.sheets['Sheet1'].set_column('A:BA', 500, _format)
 
         writer._save()
@@ -165,7 +167,7 @@ class StudentGroupSchedule:
 
     def __init__(self, csv_path: str):
 
-        group = csv_path.split('/')[-1].split('.')[0]
+        group = csv_path.split('/')[-1].split()[-1].split('.')[0]
         self.group = ''
 
         for i in range(len(group)):
